@@ -23,14 +23,14 @@
   };
 
   login.onclick = () => {
-    fetch('/login', { method: 'POST', credentials: 'same-origin' })
+    fetch('http://localhost:8080/login', { method: 'POST', credentials: 'same-origin', mode: 'no-cors' })
       .then(handleResponse)
       .then(showMessage)
       .catch((err) => showMessage(err.message));
   };
 
   logout.onclick = () => {
-    fetch('/logout', { method: 'DELETE', credentials: 'same-origin' })
+    fetch('http://localhost:8080/login', { method: 'DELETE', credentials: 'same-origin' })
       .then(handleResponse)
       .then(showMessage)
       .catch((err) => showMessage(err.message));
@@ -51,7 +51,8 @@
       ws.close();
     }
     showMessage(`${location.host}`);
-    ws = new WebSocket(`ws://${location.host}`);
+    // ws = new WebSocket(`ws://${location.host}`);
+    ws = new WebSocket('ws://localhost:8080');
     ws.onerror = () => showMessage('WebSocket error');
     ws.onopen = () => showMessage('WebSocket connection established');
     ws.onclose = () => showMessage('WebSocket connection closed');

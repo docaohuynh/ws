@@ -4,15 +4,15 @@ const session = require('express-session');
 const express = require('express');
 const http = require('http');
 const uuid = require('uuid');
-const HashMap = require('hashmap');
-const bodyParser = require('body-parser');
 
 const WebSocket = require('../..');
 
 const app = express();
-let maps = new HashMap();
-const sendMessage  = function(sentTo, message) {
-    sentTo.send(message);
+let clients = [];
+const sendMessage  = function(message) {
+    clients.forEach(function(element) {
+      element.send(message);
+  });
 };
 //
 // We need the same instance of the session parser in express and
@@ -29,7 +29,6 @@ const sessionParser = session({
 //
 app.use(express.static('public'));
 app.use(sessionParser);
-app.use(bodyParser.json())
 
 app.post('/login', (req, res) => {
   //
@@ -48,16 +47,8 @@ app.delete('/logout', (request, response) => {
   response.send({ result: 'OK', message: 'Session destroyed' });
 });
 
-app.post('/sent', (request, response) => {
-  console.log(JSON.stringify(request.body));
-  var uid = request.body.uid;
-  var msg = request.body.msg;
-  var sentTO = maps.get(uid);
-  if(sentTO){
-    console.log(uid);
-    sendMessage(sentTO, msg);
-  }
-  
+app.get('/sent', (request, response) => {
+  sendMessage('toi gui cai nay ne');
   response.send({ result: 'OK', message: 'Session Sent success' });
 });
 
@@ -76,7 +67,6 @@ const wss = new WebSocket.Server({
       // We can reject the connection by returning false to done(). For example,
       // reject here if user is unknown.
       //
-
       done(info.req.session.userId);
     });
   },
@@ -84,21 +74,15 @@ const wss = new WebSocket.Server({
 });
 
 wss.on('connection', (ws) => {
-  const session = ws.upgradeReq.session;
-  maps.set(session.userId, ws);
+  clients.push(ws);
   ws.on('message', (message) => {
-    // const session = ws.upgradeReq.session;
+    const session = ws.upgradeReq.session;
 
     //
     // Here we can now use session parameters.
     //
     console.log(`WS message ${message} from user ${session.userId}`);
-    ws.send('I sent back to uSER  :' + session.userId +' :' + message); 
-  });
-
-  ws.on('close', (event) => {
-    console.log(`WS message Close`);
-    maps.remove(session.userId);
+    ws.send('I sent back ' + message); 
   });
   
 });
@@ -108,4 +92,4 @@ wss.on('connection', (ws) => {
 //
 // Start the server.
 //
-server.listen(8080, () => console.log('Listening on http://localhost:8080'));
+server.listen(8081, () => console.log('Listening on http://localhost:8081'));
